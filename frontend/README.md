@@ -24,10 +24,16 @@ those terms filled in, and downloads the completed agreement as a PDF.
 ```bash
 npm install
 npm run dev     # http://localhost:3000
-npm test        # Vitest unit tests
+npm test          # Vitest unit tests (src/**/*.test.ts)
+npm run test:e2e  # Playwright end-to-end tests (e2e/), against a production build on :3100
 npm run lint
 npm run build
 ```
+
+First-time e2e setup: `npx playwright install chromium`.
+
+CI (`.github/workflows/frontend.yml`) runs lint, unit tests, build and the
+e2e tests on every PR that touches `frontend/` or `templates/`.
 
 Run commands from this `frontend/` directory, because the templates are
 resolved relative to it.
