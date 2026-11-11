@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { cloneElement, useId, type ReactElement } from "react";
 import type { NdaFormValues, PartyDetails } from "@/lib/nda";
 import styles from "./NdaForm.module.css";
 
@@ -10,6 +10,9 @@ interface NdaFormProps {
   onChange: (changes: Partial<NdaFormValues>) => void;
 }
 
+type FieldControl = ReactElement<{ id?: string; "aria-describedby"?: string }>;
+
+/** A labelled control; the hint is its accessible description, not its name. */
 function Field({
   label,
   hint,
@@ -17,14 +20,22 @@ function Field({
 }: {
   label: string;
   hint?: string;
-  children: ReactNode;
+  children: FieldControl;
 }) {
+  const id = useId();
+  const hintId = `${id}-hint`;
   return (
-    <label className={styles.field}>
-      <span className={styles.label}>{label}</span>
-      {hint && <span className={styles.hint}>{hint}</span>}
-      {children}
-    </label>
+    <div className={styles.field}>
+      <label htmlFor={id} className={styles.label}>
+        {label}
+      </label>
+      {hint && (
+        <span id={hintId} className={styles.hint}>
+          {hint}
+        </span>
+      )}
+      {cloneElement(children, { id, "aria-describedby": hint ? hintId : undefined })}
+    </div>
   );
 }
 
