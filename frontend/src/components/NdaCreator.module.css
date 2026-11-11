@@ -1,0 +1,106 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.sidebar {
+  border-right: 1px solid var(--border);
+  padding: 2rem 1.5rem;
+  height: 100vh;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+}
+
+.header {
+  margin-bottom: 1.5rem;
+}
+
+.header h1 {
+  font-size: 1.35rem;
+  margin-bottom: 0.4rem;
+}
+
+.header p {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.preview {
+  background: var(--canvas);
+  padding: 1.5rem 2rem 3rem;
+}
+
+.toolbar {
+  max-width: 820px;
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.preview > article {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.download {
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent-foreground);
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+}
+
+.download:hover {
+  filter: brightness(1.1);
+}
+
+.download:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 1rem;
+  }
+
+  .preview {
+    padding: 1rem 1rem 2rem;
+  }
+}
+
+/* Only the agreement itself is printed (and saved as PDF). */
+@media print {
+  .layout {
+    display: block;
+    min-height: 0;
+  }
+
+  .sidebar,
+  .toolbar {
+    display: none;
+  }
+
+  .preview {
+    background: none;
+    padding: 0;
+  }
+}
