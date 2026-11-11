@@ -1,0 +1,66 @@
+{
+  "source": "https://github.com/CommonPaper",
+  "license": "CC BY 4.0",
+  "templates": [
+    {
+      "name": "Cloud Service Agreement",
+      "description": "Common Paper standard terms for selling and buying cloud software and SaaS products, covering access and use, support, fees, confidentiality, warranties and liability.",
+      "filename": "templates/CSA.md"
+    },
+    {
+      "name": "Design Partner Agreement",
+      "description": "Common Paper standard terms for giving a design partner early access to a product in exchange for feedback while the product is being developed.",
+      "filename": "templates/design-partner-agreement.md"
+    },
+    {
+      "name": "AI Addendum",
+      "description": "Common Paper standard addendum supplementing an existing agreement with terms governing AI services, including inputs, outputs, restrictions and model training.",
+      "filename": "templates/AI-Addendum.md"
+    },
+    {
+      "name": "Pilot Agreement",
+      "description": "Common Paper standard terms for a limited-time pilot or trial allowing a customer to evaluate a product before purchasing.",
+      "filename": "templates/Pilot-Agreement.md"
+    },
+    {
+      "name": "Professional Services Agreement",
+      "description": "Common Paper standard terms for engaging a provider to perform professional services under one or more statements of work (SOWs).",
+      "filename": "templates/psa.md"
+    },
+    {
+      "name": "Partnership Agreement",
+      "description": "Common Paper standard terms for business partnerships, covering each party's obligations, feedback, trademark use, confidentiality and liability.",
+      "filename": "templates/Partnership-Agreement.md"
+    },
+    {
+      "name": "Business Associate Agreement",
+      "description": "Common Paper standard HIPAA business associate agreement governing a provider's use, disclosure and safeguarding of protected health information (PHI).",
+      "filename": "templates/BAA.md"
+    },
+    {
+      "name": "Service Level Agreement",
+      "description": "Common Paper standard service level terms defining target uptime, response times and service credits for a cloud service.",
+      "filename": "templates/sla.md"
+    },
+    {
+      "name": "Software License Agreement",
+      "description": "Common Paper standard terms for licensing on-premise or installable software to a customer for permitted uses during a subscription period.",
+      "filename": "templates/Software-License-Agreement.md"
+    },
+    {
+      "name": "Data Processing Agreement",
+      "description": "Common Paper standard data processing agreement setting out processor and subprocessor obligations for handling personal data under GDPR and similar privacy laws.",
+      "filename": "templates/DPA.md"
+    },
+    {
+      "name": "Mutual Non-Disclosure Agreement",
+      "description": "Common Paper standard terms for a mutual NDA protecting confidential information exchanged between two parties for a stated purpose.",
+      "filename": "templates/Mutual-NDA.md"
+    },
+    {
+      "name": "Mutual Non-Disclosure Agreement Cover Page",
+      "description": "Cover page for the Common Paper Mutual NDA, capturing the purpose, effective date, term, governing law and party signature details that complete the standard terms.",
+      "filename": "templates/Mutual-NDA-coverpage.md"
+    }
+  ]
+}
