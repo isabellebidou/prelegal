@@ -5,12 +5,14 @@ on:
     paths:
       - "frontend/**"
       - "templates/**"
+      - "backend/**"
       - ".github/workflows/frontend.yml"
   push:
     branches: [main]
     paths:
       - "frontend/**"
       - "templates/**"
+      - "backend/**"
       - ".github/workflows/frontend.yml"
 
 concurrency:
@@ -40,6 +42,13 @@ jobs:
 
       # Also type-checks the app.
       - run: npm run build
+
+      # The e2e tests serve the static export through the FastAPI backend.
+      - uses: astral-sh/setup-uv@v10
+        with:
+          working-directory: backend
+      - run: uv sync --locked
+        working-directory: backend
 
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

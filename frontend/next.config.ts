@@ -13,8 +13,11 @@ const lanAddresses = Object.values(networkInterfaces())
   .map((info) => info!.address);
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Built to static files in out/, which the FastAPI backend serves.
+  output: "export",
+  // Emit /nda/index.html (not /nda.html), so the backend can serve each
+  // route as a plain directory index.
+  trailingSlash: true,
   allowedDevOrigins: lanAddresses,
 };
 

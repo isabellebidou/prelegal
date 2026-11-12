@@ -6,7 +6,7 @@ const party = (page: Page, name: "Party 1" | "Party 2") =>
 const preview = (page: Page) => page.locator("article");
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/nda/");
   // Wait for hydration: the effective date is filled in client-side.
   await expect(page.getByLabel("Effective date", { exact: true })).not.toHaveValue("");
 });
