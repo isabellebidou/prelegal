@@ -8,7 +8,7 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The current implementation supports all 11 document types via AI chat with full user authentication and document persistence.
+The current implementation (PL-5) creates a Mutual NDA via AI chat, with a fake sign-in screen (no authentication yet). Support for all 11 document types (PL-6) and real accounts with saved documents (PL-7) are planned.
 
 ## Development process
 
@@ -75,7 +75,7 @@ Backend available at http://localhost:8000
 - Download button appears when all required fields are gathered (everything except modifications)
 - Stateless chat: POST /api/chat/message takes the conversation + current fields, returns reply + fields
 
-### Completed (PL-6)
+### Planned (PL-6)
 - Support for all 11 document types from catalog.json
 - AI detects document type from user requests and routes accordingly
 - Dedicated preview/PDF components for Mutual NDA, Cloud Service Agreement, Pilot Agreement
@@ -83,7 +83,7 @@ Backend available at http://localhost:8000
 - Auto-focus chat input after sending messages
 - AI always asks follow-on questions when more information is needed
 
-### Completed (PL-7)
+### Planned (PL-7)
 - Functional user authentication with JWT tokens in HttpOnly cookies
 - User signup and signin with email/password (bcrypt password hashing)
 - Document persistence - users can save documents to their account
@@ -94,6 +94,11 @@ Backend available at http://localhost:8000
 - Protected document save/load endpoints
 
 ### Current API Endpoints
+- `GET /api/chat/greeting` - Get AI greeting
+- `POST /api/chat/message` - Send chat message and get AI response
+- `GET /api/health` - Health check
+
+### Planned API Endpoints (PL-7)
 - `POST /api/auth/signup` - Create new user account
 - `POST /api/auth/signin` - Sign in and receive JWT cookie
 - `POST /api/auth/signout` - Clear auth cookie
@@ -103,6 +108,3 @@ Backend available at http://localhost:8000
 - `GET /api/documents/{id}` - Get specific document (auth required)
 - `PUT /api/documents/{id}` - Update document (auth required)
 - `DELETE /api/documents/{id}` - Delete document (auth required)
-- `GET /api/chat/greeting` - Get AI greeting
-- `POST /api/chat/message` - Send chat message and get AI response
-- `GET /api/health` - Health check
