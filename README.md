@@ -11,7 +11,9 @@ scripts/start-mac.sh     # or start-linux.sh, or scripts/start-windows.ps1
 scripts/stop-mac.sh      # or stop-linux.sh, or scripts/stop-windows.ps1
 ```
 
-The app runs at http://localhost:8000. The SQLite database is recreated empty on every start.
+The app runs at http://localhost:8000. If that port is taken, pick another with
+`PRELEGAL_PORT=8080 scripts/start-mac.sh` (PowerShell: `$env:PRELEGAL_PORT = 8080`).
+The SQLite database is recreated empty on every start.
 
 ## Layout
 
