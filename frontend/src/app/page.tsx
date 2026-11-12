@@ -1,7 +1,10 @@
-import NdaCreator from "@/components/NdaCreator";
-import { loadMutualNdaTemplates } from "@/lib/templates";
+import type { Metadata } from "next";
+import SignIn from "@/components/SignIn";
+
+export const metadata: Metadata = {
+  title: "Sign in | Prelegal",
+};
 
 export default function Home() {
-  const { coverPage, standardTerms } = loadMutualNdaTemplates();
-  return <NdaCreator coverPageTemplate={coverPage} standardTerms={standardTerms} />;
+  return <SignIn />;
 }

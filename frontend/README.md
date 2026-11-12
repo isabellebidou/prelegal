@@ -1,8 +1,9 @@
 # Prelegal frontend
 
-A Next.js prototype for creating a Mutual Non-Disclosure Agreement (Jira PL-3).
-The user fills in the key terms in a form, sees the Common Paper Mutual NDA with
-those terms filled in, and downloads the completed agreement as a PDF.
+The Next.js frontend, built as static files (`out/`) that the FastAPI backend
+serves. `/` is a placeholder sign-in screen (no authentication yet: any name and
+email continue). `/nda/` is the Mutual NDA creator: the user fills in the key
+terms, sees the Common Paper Mutual NDA filled in, and downloads it as a PDF.
 
 ## How it works
 
@@ -25,15 +26,16 @@ those terms filled in, and downloads the completed agreement as a PDF.
 npm install
 npm run dev     # http://localhost:3000
 npm test          # Vitest unit tests (src/**/*.test.ts)
-npm run test:e2e  # Playwright end-to-end tests (e2e/), against a production build on :3100
+npm run test:e2e  # Playwright end-to-end tests (e2e/), served by the backend on :3100
 npm run lint
 npm run build
 ```
 
-First-time e2e setup: `npx playwright install chromium`.
+First-time e2e setup: `npx playwright install chromium`. The e2e tests start the
+backend, so they also need [uv](https://docs.astral.sh/uv/).
 
 CI (`.github/workflows/frontend.yml`) runs lint, unit tests, build and the
-e2e tests on every PR that touches `frontend/` or `templates/`.
+e2e tests on every PR that touches `frontend/`, `backend/` or `templates/`.
 
 Run commands from this `frontend/` directory, because the templates are
 resolved relative to it.
