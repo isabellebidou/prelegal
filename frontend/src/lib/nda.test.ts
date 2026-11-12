@@ -7,6 +7,8 @@ import {
   escapeMarkdown,
   fillCoverPage,
   formatDate,
+  isComplete,
+  mergeAiChanges,
   type NdaFormValues,
 } from "./nda";
 
@@ -153,5 +155,74 @@ describe("documentTitle", () => {
   it("names the PDF after the companies that are filled in", () => {
     expect(documentTitle(filled)).toBe("Mutual NDA - Acme Inc - Globex");
     expect(documentTitle(defaultNdaFormValues)).toBe("Mutual NDA");
+  });
+});
+
+describe("isComplete", () => {
+  it("is false for the starting values", () => {
+    expect(isComplete(defaultNdaFormValues)).toBe(false);
+  });
+
+  it("is true when every required field is filled, without modifications", () => {
+    expect(isComplete(filled)).toBe(true);
+  });
+
+  it.each([
+    ["purpose", { purpose: " " }],
+    ["effective date", { effectiveDate: "" }],
+    ["invalid effective date", { effectiveDate: "2026-02-30" }],
+    ["MNDA years", { mndaTermYears: "" }],
+    ["confidentiality years", { confidentialityTermYears: "0" }],
+    ["governing law", { governingLaw: "" }],
+    ["jurisdiction", { jurisdiction: "" }],
+    ["a party field", { party2: { ...filled.party2, noticeAddress: "" } }],
+  ])("is false without %s", (_, changes) => {
+    expect(isComplete({ ...filled, ...changes })).toBe(false);
+  });
+
+  it("does not need years for terms that do not use them", () => {
+    expect(
+      isComplete({
+        ...filled,
+        mndaTermType: "untilTerminated",
+        mndaTermYears: "",
+        confidentialityTermType: "perpetual",
+        confidentialityTermYears: "",
+      }),
+    ).toBe(true);
+  });
+});
+
+describe("mergeAiChanges", () => {
+  const sent = { ...defaultNdaFormValues, governingLaw: "Delaware" };
+
+  it("takes the fields the AI changed", () => {
+    const returned = {
+      ...sent,
+      jurisdiction: "New Castle, DE",
+      party1: { ...sent.party1, company: "Acme Inc" },
+    };
+    expect(mergeAiChanges(sent, sent, returned)).toEqual(returned);
+  });
+
+  it("keeps fields edited while the AI was replying", () => {
+    const current = {
+      ...sent,
+      purpose: "Edited in the form",
+      party2: { ...sent.party2, name: "Alan Turing" },
+    };
+    const returned = { ...sent, jurisdiction: "New Castle, DE" };
+
+    const merged = mergeAiChanges(current, sent, returned);
+
+    expect(merged.jurisdiction).toBe("New Castle, DE");
+    expect(merged.purpose).toBe("Edited in the form");
+    expect(merged.party2.name).toBe("Alan Turing");
+    expect(merged.governingLaw).toBe("Delaware");
+  });
+
+  it("lets the AI clear a field", () => {
+    const returned = { ...sent, governingLaw: "" };
+    expect(mergeAiChanges(sent, sent, returned).governingLaw).toBe("");
   });
 });

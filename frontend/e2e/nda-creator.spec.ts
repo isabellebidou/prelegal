@@ -1,15 +1,35 @@
 import { expect, test, type Page } from "@playwright/test";
+import { COMPLETE_FIELDS, openNdaCreator, stubChat } from "./helpers";
 
 const party = (page: Page, name: "Party 1" | "Party 2") =>
   page.getByRole("group", { name });
 
 const preview = (page: Page) => page.locator("article");
 
+// These tests edit the agreement through the form ("Edit fields" tab).
 test.beforeEach(async ({ page }) => {
-  await page.goto("/nda/");
-  // Wait for hydration: the effective date is filled in client-side.
-  await expect(page.getByLabel("Effective date", { exact: true })).not.toHaveValue("");
+  await stubChat(page);
+  await openNdaCreator(page);
+  await page.getByRole("tab", { name: "Edit fields" }).click();
 });
+
+/** Fills every required field through the form. */
+async function fillRequiredFields(page: Page) {
+  const f = COMPLETE_FIELDS;
+  await page.getByLabel("Purpose", { exact: true }).fill(f.purpose);
+  await page.getByLabel("Effective date", { exact: true }).fill(f.effectiveDate);
+  await page.getByLabel("MNDA term in years", { exact: true }).fill(f.mndaTermYears);
+  await page.getByLabel("Term of confidentiality in years", { exact: true }).fill(f.confidentialityTermYears);
+  await page.getByLabel("Governing law", { exact: true }).fill(f.governingLaw);
+  await page.getByLabel("Jurisdiction", { exact: true }).fill(f.jurisdiction);
+  for (const [name, p] of [["Party 1", f.party1], ["Party 2", f.party2]] as const) {
+    const group = party(page, name);
+    await group.getByLabel("Company", { exact: true }).fill(p.company);
+    await group.getByLabel("Signatory name", { exact: true }).fill(p.name);
+    await group.getByLabel("Title", { exact: true }).fill(p.title);
+    await group.getByLabel("Notice address", { exact: true }).fill(p.noticeAddress);
+  }
+}
 
 test("updates the NDA preview live as the form is filled in", async ({ page }) => {
   await page.getByLabel("Purpose", { exact: true }).fill("Exploring a joint venture.");
@@ -65,16 +85,11 @@ test("reflects the term options in the cover page checkboxes", async ({ page }) 
   await expect(page.getByLabel("MNDA term in years", { exact: true })).toBeDisabled();
 });
 
-test("defaults the effective date to today and follows changes", async ({ page }) => {
-  const today = await page.evaluate(() =>
-    new Date().toLocaleDateString("en-US", { dateStyle: "long" }),
-  );
+test("starts with the template placeholders and follows the effective date", async ({ page }) => {
   const doc = preview(page);
-  await expect(doc).toContainText(today);
-
-  // Editing another field must not freeze or drop the default date.
-  await page.getByLabel("Governing law", { exact: true }).fill("Delaware");
-  await expect(doc).toContainText(today);
+  await expect(doc).toContainText("[Today’s date]");
+  await expect(doc).toContainText("[Evaluating whether to enter into a business relationship");
+  await expect(doc).toContainText("Expires [1 year(s)] from Effective Date.");
 
   await page.getByLabel("Effective date", { exact: true }).fill("2027-01-15");
   await expect(doc).toContainText("January 15, 2027");
@@ -112,8 +127,8 @@ test("Download PDF prints with a file name from the companies", async ({ page })
       w.printedTitle = document.title;
     };
   });
-  await party(page, "Party 1").getByLabel("Company", { exact: true }).fill("Acme Inc");
-  await party(page, "Party 2").getByLabel("Company", { exact: true }).fill("Globex");
+  await expect(page.getByRole("button", { name: "Download PDF" })).toHaveCount(0);
+  await fillRequiredFields(page);
   const originalTitle = await page.title();
 
   await page.getByRole("button", { name: "Download PDF" }).click();
@@ -127,7 +142,7 @@ test("Download PDF prints with a file name from the companies", async ({ page })
 });
 
 test("prints only the agreement, with standard terms on a new page", async ({ page }) => {
-  await page.getByLabel("Governing law", { exact: true }).fill("Delaware");
+  await fillRequiredFields(page);
   await page.emulateMedia({ media: "print" });
 
   await expect(page.locator("aside")).toBeHidden();

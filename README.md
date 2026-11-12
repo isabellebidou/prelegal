@@ -26,6 +26,6 @@ The SQLite database is recreated empty on every start.
 
 ```bash
 cd backend && uv run pytest                                   # backend tests
-cd backend && uv run uvicorn backend.main:app --reload        # API (+ frontend/out if built) on :8000
-cd frontend && npm run dev                                     # frontend dev server on :3000
+cd backend && uv run --env-file ../.env uvicorn backend.main:app --reload  # API (+ frontend/out if built) on :8000
+cd frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev  # frontend dev server on :3000
 ```

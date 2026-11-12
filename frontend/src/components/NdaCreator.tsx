@@ -1,32 +1,24 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import {
   defaultNdaFormValues,
   documentTitle,
   fillCoverPage,
+  isComplete,
   type NdaFormValues,
 } from "@/lib/nda";
+import Chat from "./Chat";
 import NdaDocument from "./NdaDocument";
 import NdaForm from "./NdaForm";
 import styles from "./NdaCreator.module.css";
 
-/** Today's date as YYYY-MM-DD in the user's local time zone. */
-function localToday(): string {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
+const TABS = [
+  { id: "chat", label: "Chat" },
+  { id: "form", label: "Edit fields" },
+] as const;
 
-const noopSubscribe = () => () => {};
-
-/**
- * Today's date in the browser; "" while prerendering, so the static page
- * never bakes in the build date.
- */
-function useToday(): string {
-  return useSyncExternalStore(noopSubscribe, localToday, () => "");
-}
+type Tab = (typeof TABS)[number]["id"];
 
 interface NdaCreatorProps {
   coverPageTemplate: string;
@@ -35,12 +27,9 @@ interface NdaCreatorProps {
 
 export default function NdaCreator({ coverPageTemplate, standardTerms }: NdaCreatorProps) {
   const [values, setValues] = useState<NdaFormValues>(defaultNdaFormValues);
-  const today = useToday();
-
-  // The effective date shows today until the user picks one. Only the fields
-  // the user edits are stored, so the default never gets frozen into state.
-  const resolvedValues = { ...values, effectiveDate: values.effectiveDate || today };
-  const coverPage = fillCoverPage(coverPageTemplate, resolvedValues);
+  const [tab, setTab] = useState<Tab>("chat");
+  const coverPage = fillCoverPage(coverPageTemplate, values);
+  const complete = isComplete(values);
 
   const updateValues = (changes: Partial<NdaFormValues>) =>
     setValues((prev) => ({ ...prev, ...changes }));
@@ -53,7 +42,7 @@ export default function NdaCreator({ coverPageTemplate, standardTerms }: NdaCrea
     const restoreTitle = () => {
       document.title = previousTitle;
     };
-    document.title = documentTitle(resolvedValues);
+    document.title = documentTitle(values);
     window.addEventListener("afterprint", restoreTitle, { once: true });
     window.print();
   };
@@ -64,19 +53,53 @@ export default function NdaCreator({ coverPageTemplate, standardTerms }: NdaCrea
         <header className={styles.header}>
           <h1>Mutual NDA Creator</h1>
           <p>
-            Fill in the details below. The agreement updates as you type; download
-            it as a PDF when you&apos;re done.
+            Chat with the AI to fill in the agreement, or edit the fields directly. The
+            preview updates as you go.
           </p>
         </header>
-        <NdaForm values={resolvedValues} onChange={updateValues} />
+
+        <div className={styles.tabs} role="tablist">
+          {TABS.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              id={`tab-${id}`}
+              aria-controls={`panel-${id}`}
+              aria-selected={tab === id}
+              className={styles.tab}
+              onClick={() => setTab(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Both panels stay mounted so the conversation survives switching tabs. */}
+        <div
+          role="tabpanel"
+          id="panel-chat"
+          aria-labelledby="tab-chat"
+          className={styles.chatPanel}
+          hidden={tab !== "chat"}
+        >
+          <Chat values={values} onFieldsChange={setValues} />
+        </div>
+        <div role="tabpanel" id="panel-form" aria-labelledby="tab-form" hidden={tab !== "form"}>
+          <NdaForm values={values} onChange={updateValues} />
+        </div>
       </aside>
 
       <main className={styles.preview}>
         <div className={styles.toolbar}>
           <span>Preview</span>
-          <button type="button" className={styles.download} onClick={downloadPdf}>
-            Download PDF
-          </button>
+          {complete ? (
+            <button type="button" className={styles.download} onClick={downloadPdf}>
+              Download PDF
+            </button>
+          ) : (
+            <span>Download is available once all details are filled in</span>
+          )}
         </div>
         <NdaDocument coverPage={coverPage} standardTerms={standardTerms} />
       </main>
