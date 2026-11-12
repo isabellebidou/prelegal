@@ -44,7 +44,7 @@ jobs:
       - run: npm run build
 
       # The e2e tests serve the static export through the FastAPI backend.
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           working-directory: backend
       - run: uv sync --locked
