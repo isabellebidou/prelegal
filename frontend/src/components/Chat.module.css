@@ -1,0 +1,95 @@
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+  min-height: 0;
+}
+
+.log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.assistant,
+.user {
+  max-width: 88%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.user {
+  white-space: pre-wrap;
+}
+
+.assistant > * + * {
+  margin-top: 0.5rem;
+}
+
+.assistant ul,
+.assistant ol {
+  padding-left: 1.2rem;
+}
+
+.assistant {
+  align-self: flex-start;
+  background: var(--canvas);
+}
+
+.user {
+  align-self: flex-end;
+  color: var(--accent-foreground);
+  background: var(--accent);
+}
+
+.typing {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.error {
+  font-size: 0.85rem;
+  color: var(--error);
+}
+
+.composer {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.composer input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--foreground);
+  background: var(--input-background);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.55rem 0.65rem;
+}
+
+.composer button {
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent-foreground);
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+}
+
+.composer button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+

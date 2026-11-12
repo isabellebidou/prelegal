@@ -5,6 +5,7 @@ description = "Prelegal API: FastAPI app that also serves the static frontend"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.162.5",
+    "openai>=3.50.0",
     "uvicorn>=0.54.0",
 ]
 

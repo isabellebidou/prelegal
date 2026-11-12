@@ -7,6 +7,7 @@
   --canvas: #f1f1ef;
   --accent: #1f3a5f;
   --accent-foreground: #ffffff;
+  --error: #b3261e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,6 +20,7 @@
     --canvas: #0a0a0a;
     --accent: #7aa7e0;
     --accent-foreground: #0a0a0a;
+    --error: #f2b8b5;
   }
 
   html {

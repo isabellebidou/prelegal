@@ -5,8 +5,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from backend.chat import router as chat_router
 from backend.db import connect, init_db
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -21,6 +23,10 @@ def create_app(db_path: Path, static_dir: Path) -> FastAPI:
         yield
 
     app = FastAPI(title="Prelegal", lifespan=lifespan)
+    # Lets the Next.js dev server (npm run dev) call the API. In production
+    # the frontend is served from this app, so requests are same-origin.
+    app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allow_methods=["*"], allow_headers=["*"])
+    app.include_router(chat_router)
 
     @app.get("/api/health")
     def health() -> dict[str, str]:

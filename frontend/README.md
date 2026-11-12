@@ -16,6 +16,12 @@ terms, sees the Common Paper Mutual NDA filled in, and downloads it as a PDF.
   found, it throws, and the unit tests fail.
 - `src/components/NdaDocument.tsx` renders the markdown with `react-markdown`
   (GFM + sanitized inline HTML).
+- `src/components/Chat.tsx` is the AI chat. Each message sends the whole
+  conversation and the current fields to `POST /api/chat/message`; the backend
+  asks OpenAI (Structured Outputs) and returns a reply plus the updated fields.
+  The "Edit fields" tab (`NdaForm.tsx`) edits the same fields by hand.
+- `isComplete` in `src/lib/nda.ts` decides when every required field (all
+  except modifications) is filled; only then is **Download PDF** shown.
 - **Download PDF** opens the browser print dialog. Print styles hide the form,
   so choosing "Save as PDF" saves just the agreement, with the standard terms
   starting on a new page.
@@ -24,7 +30,7 @@ terms, sees the Common Paper Mutual NDA filled in, and downloads it as a PDF.
 
 ```bash
 npm install
-npm run dev     # http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev  # http://localhost:3000, API on :8000
 npm test          # Vitest unit tests (src/**/*.test.ts)
 npm run test:e2e  # Playwright end-to-end tests (e2e/), served by the backend on :3100
 npm run lint

@@ -66,13 +66,14 @@ Backend available at http://localhost:8000
 - Mutual NDA form with live preview and PDF download
 
 ### Completed (PL-5)
-- AI chat interface replaces manual form for NDA creation
+- AI chat interface for NDA creation, with an "Edit fields" tab to edit the same fields by hand
 - Use OpenAI for the AI calls. An OPENAI_API_KEY is in .env in the project root
 - Use `gpt-4o-mini` as the model
 - Structured outputs for reliable field extraction from conversation
 - Live preview updates as AI extracts fields from chat
 - AI greets user, asks questions conversationally, and confirms when complete
-- Download button appears when all required fields are gathered
+- Download button appears when all required fields are gathered (everything except modifications)
+- Stateless chat: POST /api/chat/message takes the conversation + current fields, returns reply + fields
 
 ### Completed (PL-6)
 - Support for all 11 document types from catalog.json

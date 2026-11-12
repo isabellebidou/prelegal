@@ -43,14 +43,17 @@ const emptyParty: PartyDetails = {
   noticeAddress: "",
 };
 
+/**
+ * Starting values: everything the user must confirm starts empty, so the
+ * preview shows the template placeholders until the chat or form fills them.
+ */
 export const defaultNdaFormValues: NdaFormValues = {
-  purpose:
-    "Evaluating whether to enter into a business relationship with the other party.",
+  purpose: "",
   effectiveDate: "",
   mndaTermType: "expires",
-  mndaTermYears: "1",
+  mndaTermYears: "",
   confidentialityTermType: "years",
-  confidentialityTermYears: "1",
+  confidentialityTermYears: "",
   governingLaw: "",
   jurisdiction: "",
   modifications: "",
@@ -185,4 +188,51 @@ export function documentTitle(values: NdaFormValues): string {
     .map((c) => c.trim())
     .filter(Boolean);
   return ["Mutual NDA", ...companies].join(" - ");
+}
+
+/**
+ * Whether every required field is filled, so the agreement can be downloaded.
+ * Everything except modifications is required; a term's years only when that
+ * term option uses them.
+ */
+export function isComplete(values: NdaFormValues): boolean {
+  const filled = (text: string) => text.trim() !== "";
+  const partyFilled = (p: PartyDetails) =>
+    [p.name, p.title, p.company, p.noticeAddress].every(filled);
+
+  return (
+    [values.purpose, values.governingLaw, values.jurisdiction].every(filled) &&
+    formatDate(values.effectiveDate) !== "" &&
+    (values.mndaTermType === "untilTerminated" || formatYears(values.mndaTermYears) !== null) &&
+    (values.confidentialityTermType === "perpetual" ||
+      formatYears(values.confidentialityTermYears) !== null) &&
+    partyFilled(values.party1) &&
+    partyFilled(values.party2)
+  );
+}
+
+/** Takes each field from `returned` if it differs from `sent`, else from `current`. */
+function pickChanged<T extends object>(current: T, sent: T, returned: T): T {
+  const result = { ...current };
+  for (const key of Object.keys(current) as (keyof T)[]) {
+    if (returned[key] !== sent[key]) result[key] = returned[key];
+  }
+  return result;
+}
+
+/**
+ * Applies the AI's answer on top of the current values. Only the fields the AI
+ * changed from what was sent to it are taken, so edits made in the form while
+ * the AI was replying are kept.
+ */
+export function mergeAiChanges(
+  current: NdaFormValues,
+  sent: NdaFormValues,
+  returned: NdaFormValues,
+): NdaFormValues {
+  return {
+    ...pickChanged(current, sent, returned),
+    party1: pickChanged(current.party1, sent.party1, returned.party1),
+    party2: pickChanged(current.party2, sent.party2, returned.party2),
+  };
 }

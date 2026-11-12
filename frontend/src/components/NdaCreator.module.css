@@ -11,6 +11,8 @@
   overflow-y: auto;
   position: sticky;
   top: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
@@ -26,6 +28,42 @@
   font-size: 0.9rem;
   color: var(--muted);
   line-height: 1.45;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+}
+
+.tab[aria-selected="true"] {
+  color: var(--foreground);
+  border-bottom-color: var(--accent);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Never set display here: it would override the hidden attribute. */
+.chatPanel {
+  flex: 1;
+  min-height: 0;
 }
 
 .preview {
@@ -80,6 +118,11 @@
     border-right: none;
     border-bottom: 1px solid var(--border);
     padding: 1.5rem 1rem;
+  }
+
+  .chatPanel {
+    flex: none;
+    height: 60vh;
   }
 
   .preview {
