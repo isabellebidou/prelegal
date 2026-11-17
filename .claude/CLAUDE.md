@@ -8,7 +8,7 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The current implementation (PL-6, merged in PR #6) drafts all 11 document types via AI chat at /create, with a fake sign-in screen (no authentication yet). Real accounts with saved documents (PL-7) are next.
+The current implementation (PL-7) drafts all 11 document types via AI chat at /create. Anyone can draft and download as a guest; an account (email + password) is needed only to save documents.
 
 ## Development process
 
@@ -89,15 +89,18 @@ Backend available at http://localhost:8000
 - One Structured Outputs schema per document type, built from the registry (backend/src/backend/documents.py)
 - Backend clears placeholder company names the model invents (e.g. "Your Company")
 
-### Planned (PL-7)
-- Functional user authentication with JWT tokens in HttpOnly cookies
+### Completed (PL-7)
+- Functional user authentication with JWT tokens in HttpOnly cookies (secret per server start unless JWT_SECRET is set; SECURE_COOKIES=1 adds the Secure flag)
 - User signup and signin with email/password (bcrypt password hashing)
-- Document persistence - users can save documents to their account
-- My Documents modal to view, load, and delete saved documents
+- Guests can draft and download; Save asks guests to sign in or create an account in a dialog, then saves
+- Document persistence - users can save documents (fields + chat conversation) to their account
+- My Documents modal to view, load, and delete saved documents; reopening restores the chat
 - User menu with sign out functionality
-- New Document button to start fresh
+- New Document button to start fresh (asks before discarding unsaved changes)
 - Auth context for managing user state across the app
-- Protected document save/load endpoints
+- Protected document save/load endpoints, scoped to the signed-in user
+- Disclaimer: banner in the app and a "Draft: subject to legal review" line printed on every document
+- UI polish with the brand colour scheme: landing page, header bar, dialogs
 
 ### Testing
 - Backend: `cd backend && uv run pytest`
@@ -108,7 +111,7 @@ Backend available at http://localhost:8000
 - `POST /api/chat/message` - Send chat message (+ documentType and fields) and get AI reply, documentType and fields
 - `GET /api/health` - Health check
 
-### Planned API Endpoints (PL-7)
+### Auth and document endpoints (PL-7)
 - `POST /api/auth/signup` - Create new user account
 - `POST /api/auth/signin` - Sign in and receive JWT cookie
 - `POST /api/auth/signout` - Clear auth cookie

@@ -1,25 +1,32 @@
 :root {
+  /* Brand colours (see CLAUDE.md). */
+  --navy: #032147;
+  --primary: #209dd7;
+  --submit: #753991;
+  --highlight: #ecad0a;
+
   --background: #ffffff;
-  --foreground: #171717;
-  --muted: #5f6368;
-  --border: #dcdcdc;
+  --foreground: #1b2433;
+  --heading: var(--navy);
+  --muted: #888888;
+  --border: #dde3ea;
   --input-background: #ffffff;
-  --canvas: #f1f1ef;
-  --accent: #1f3a5f;
+  --canvas: #f3f5f8;
+  --accent: var(--primary);
   --accent-foreground: #ffffff;
   --error: #b3261e;
+  --header-height: 3.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #121212;
-    --foreground: #ededed;
-    --muted: #a0a0a0;
-    --border: #333333;
-    --input-background: #1b1b1b;
-    --canvas: #0a0a0a;
-    --accent: #7aa7e0;
-    --accent-foreground: #0a0a0a;
+    --background: #0f1724;
+    --foreground: #e6ebf2;
+    --heading: #d6e6f5;
+    --muted: #93a0b0;
+    --border: #2a3646;
+    --input-background: #152031;
+    --canvas: #0a111c;
     --error: #f2b8b5;
   }
 
@@ -32,6 +39,12 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--heading);
 }
 
 body {

@@ -1,6 +1,7 @@
 """FastAPI app: the JSON API under /api, plus the static frontend export at /."""
 
 import os
+import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -8,8 +9,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from backend.auth import router as auth_router
 from backend.chat import router as chat_router
 from backend.db import connect, init_db
+from backend.saved import router as documents_router
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_DB_PATH = BACKEND_DIR / "data" / "prelegal.db"
@@ -23,10 +26,21 @@ def create_app(db_path: Path, static_dir: Path) -> FastAPI:
         yield
 
     app = FastAPI(title="Prelegal", lifespan=lifespan)
-    # Lets the Next.js dev server (npm run dev) call the API. In production
-    # the frontend is served from this app, so requests are same-origin.
-    app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allow_methods=["*"], allow_headers=["*"])
+    app.state.db_path = db_path
+    app.state.jwt_secret = os.environ.get("JWT_SECRET") or secrets.token_urlsafe(32)
+    app.state.secure_cookies = os.environ.get("SECURE_COOKIES") == "1"
+    # Lets the Next.js dev server (npm run dev) call the API with the session
+    # cookie. In production the frontend is served from this app (same origin).
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:3000"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     app.include_router(chat_router)
+    app.include_router(auth_router)
+    app.include_router(documents_router)
 
     @app.get("/api/health")
     def health() -> dict[str, str]:

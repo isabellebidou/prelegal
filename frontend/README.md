@@ -1,8 +1,8 @@
 # Prelegal frontend
 
 The Next.js frontend, built as static files (`out/`) that the FastAPI backend
-serves. `/` is a placeholder sign-in screen (no authentication yet: any name and
-email continue). `/create/` is the document creator for all 11 Common Paper
+serves. `/` is the landing page: sign in, create an account, or continue as a
+guest. `/create/` is the document creator for all 11 Common Paper
 documents in `../catalog.json` (`/nda/` redirects there): the user chats with
 the AI or edits fields, sees the agreement filled in, and downloads it as a PDF.
 
@@ -24,6 +24,10 @@ the AI or edits fields, sees the agreement filled in, and downloads it as a PDF.
   The "Edit fields" tab picks the type and edits the same fields by hand.
 - `isComplete` in `src/lib/documents.ts` decides when every required field is
   filled; only then is **Download PDF** shown.
+- Accounts: `AuthProvider.tsx` holds the signed-in user (the session is an
+  HttpOnly cookie). Guests can draft and download; **Save** opens the sign-in
+  dialog first. Saved documents keep their fields and chat conversation and
+  are listed in **My documents** (`DocumentsModal.tsx`).
 - **Download PDF** opens the browser print dialog. Print styles hide the form,
   so choosing "Save as PDF" saves just the agreement, with the standard terms
   starting on a new page.

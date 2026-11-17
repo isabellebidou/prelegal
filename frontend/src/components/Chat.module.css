@@ -45,8 +45,8 @@
 
 .user {
   align-self: flex-end;
-  color: var(--accent-foreground);
-  background: var(--accent);
+  color: #fff;
+  background: var(--navy);
 }
 
 .typing {
@@ -80,8 +80,8 @@
   font: inherit;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--accent-foreground);
-  background: var(--accent);
+  color: #fff;
+  background: var(--submit);
   border: none;
   border-radius: 6px;
   padding: 0.55rem 0.9rem;

@@ -1,0 +1,52 @@
+.dialog {
+  margin: auto;
+  width: min(440px, calc(100vw - 2rem));
+  max-height: calc(100vh - 4rem);
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  color: var(--foreground);
+  background: var(--background);
+  box-shadow: 0 20px 50px rgb(3 33 71 / 30%);
+}
+
+.dialog::backdrop {
+  background: rgb(3 33 71 / 45%);
+}
+
+.body {
+  padding: 1.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.header h2 {
+  font-size: 1.15rem;
+  color: var(--heading);
+}
+
+.close {
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--canvas);
+}
+
+@media print {
+  .dialog {
+    display: none;
+  }
+}

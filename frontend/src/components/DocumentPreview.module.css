@@ -98,6 +98,20 @@
   font-weight: 600;
 }
 
+/* Printed on every document. */
+.draftNotice {
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 0.75rem;
+  font-family: system-ui, sans-serif;
+  font-size: 0.75rem;
+  text-align: center;
+  letter-spacing: 0.02em;
+  color: #5a4300;
+  background: #fdf3d7;
+  border: 1px solid #ecad0a;
+  border-radius: 4px;
+}
+
 .standardTerms {
   margin-top: 2.5rem;
   padding-top: 1.5rem;
