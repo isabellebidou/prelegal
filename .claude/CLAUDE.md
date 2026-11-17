@@ -108,35 +108,28 @@ Backend available at http://localhost:8000
 - The AI fills in the effective date on its first turn without asking (seen 6/6 in live runs, once with the wrong year). Prompting alone did not stop it; fix in the backend (drop dates the user never gave).
 - Jira PL-8 ("sign up and sign in screen") was closed as a duplicate of PL-7.
 
-### Planned (PL-9): Deployment, auto-deploy on push to main
+### Planned (PL-9): Deployment to Railway, auto-deploy on push to main
 
 Target architecture (cheap, minimal code change):
-- **Frontend on AWS Amplify Hosting**: the Next.js static export (frontend/out). Amplify's GitHub connection builds and deploys on every push to main.
-- **Backend on Railway**: the existing Dockerfile (FastAPI). Railway's GitHub integration redeploys on every push to main. Amplify cannot run the Python backend.
+- **One Railway service** built from the existing Dockerfile: FastAPI serves both the static Next.js export and `/api`, exactly as in local Docker. Same origin, so the HttpOnly session cookie works with no CORS or proxy changes. No Amplify.
 - **Database: SQLite on a Railway volume** (no extra cost). One replica only. Move to Railway Postgres later if backups or several instances are needed.
-- **One origin for the browser**: an Amplify rewrite proxies `/api/<*>` to the Railway URL (status 200), so the frontend keeps calling `/api/...`, the HttpOnly session cookie stays first-party (SameSite=Lax works) and no CORS change is needed. `NEXT_PUBLIC_API_URL` stays empty.
+- **Deploys**: Railway's GitHub integration redeploys on every push to main, with "Wait for CI" enabled so it only deploys when the GitHub Actions checks pass.
 
 Code and config changes:
-- `db.py`: create tables only if missing (`CREATE TABLE IF NOT EXISTS`); wipe the database only when `RESET_DB=1` (keep that for the local Docker demo via the start scripts). Update the "created from scratch" line in Technical design.
+- `db.py`: create tables only if missing (`CREATE TABLE IF NOT EXISTS`); wipe the database only when `RESET_DB=1`. The start scripts set `RESET_DB=1` to keep the local demo behaviour. Update the "created from scratch" line in Technical design.
 - Dockerfile: listen on `${PORT:-8000}` (Railway sets PORT).
 - `railway.json`: Dockerfile builder, healthcheck path `/api/health`, restart on failure.
-- `amplify.yml` at the repo root: appRoot `frontend`, `npm ci`, `npm run build`, artifacts `out/`. The build reads `../templates`, which is in the cloned repo.
-- Amplify rewrites: `/api/<*>` -> `https://<railway-domain>/api/<*>` (200); `/create` and `/nda` keep working through the static redirect pages.
+- `/api/health`: also return the deployed commit (`RAILWAY_GIT_COMMIT_SHA`), so a smoke test can tell when the new version is live.
 - Railway variables: `OPENAI_API_KEY`, fixed `JWT_SECRET` (sessions survive redeploys), `SECURE_COOKIES=1`, `DB_PATH=/data/prelegal.db` with the volume mounted at `/data`.
-- Optional: `ALLOWED_ORIGINS` env var instead of the hard-coded localhost:3000 CORS origin, only needed if the browser ever calls Railway directly.
-
-Deploy only after CI passes:
-- Railway: enable "Wait for CI" on the service, so a push to main deploys only when the GitHub Actions checks pass.
-- Amplify builds on push by itself; to gate it on CI, turn off auto-build and call an Amplify incoming webhook from a GitHub Actions job that runs after the test job on main (webhook URL stored as a GitHub secret).
 
 Tests:
-- Backend: data survives an app restart without `RESET_DB`; `RESET_DB=1` wipes it; `DB_PATH` on a fresh directory creates the schema.
+- Backend: data survives an app restart without `RESET_DB`; `RESET_DB=1` wipes it; a fresh `DB_PATH` directory gets the schema; health returns the commit when set.
 - Container: the image starts on a custom `PORT` and answers `/api/health`.
-- Post-deploy smoke test (GitHub Actions job after deploy): through the Amplify URL, `GET /api/health`, `GET /api/chat/greeting`, sign up, `GET /api/auth/me` with the cookie, save and list a document, then delete it.
-- Existing CI (lint, unit, e2e) must stay green; it is the gate for both deploys.
+- Post-deploy smoke test (GitHub Actions job on main): wait until `/api/health` on the Railway URL reports the pushed commit, then `GET /api/chat/greeting`, sign up, `GET /api/auth/me` with the cookie, save, list and delete a document.
+- Existing CI (lint, unit, e2e) must stay green; it gates the deploy.
 
 Tooling (Railway plugin or MCP?):
-- Not needed for deployments: push-to-main deploys come from the native GitHub integrations of Railway and Amplify, set up once in their dashboards.
+- Not needed for deployments: push-to-main deploys come from Railway's native GitHub integration, set up once in the dashboard (connect repo, add volume, set variables, enable Wait for CI).
 - Optional for convenience: the Railway CLI (`railway logs`, `railway variables`) or a Railway MCP server would let Claude read logs and set variables from the terminal. Use it for diagnosis, not as the deploy path.
 
 ### Testing
