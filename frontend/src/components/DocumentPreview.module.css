@@ -91,7 +91,10 @@
   color: #6b6b6b;
 }
 
-.document :global(.coverpage_link) {
+.document :global(.coverpage_link),
+.document :global(.orderform_link),
+.document :global(.keyterms_link),
+.document :global(.businessterms_link) {
   font-weight: 600;
 }
 
@@ -129,4 +132,19 @@
   .document h3 {
     break-after: avoid;
   }
+}
+
+/* Filled cover page values keep the user's line breaks. */
+.value {
+  white-space: pre-line;
+}
+
+.placeholder {
+  color: #6b6b6b;
+}
+
+.empty {
+  text-align: center;
+  color: #6b6b6b;
+  padding: 4rem 1rem;
 }

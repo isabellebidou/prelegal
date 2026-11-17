@@ -1,8 +1,9 @@
 "use client";
 
-import { cloneElement, useId, type ReactElement } from "react";
-import type { NdaFormValues, PartyDetails } from "@/lib/nda";
-import styles from "./NdaForm.module.css";
+import type { NdaFormValues, TermUnit } from "@/lib/nda";
+import Field from "./Field";
+import PartyFieldset from "./PartyFieldset";
+import styles from "./Form.module.css";
 
 interface NdaFormProps {
   values: NdaFormValues;
@@ -10,78 +11,50 @@ interface NdaFormProps {
   onChange: (changes: Partial<NdaFormValues>) => void;
 }
 
-type FieldControl = ReactElement<{ id?: string; "aria-describedby"?: string }>;
-
-/** A labelled control; the hint is its accessible description, not its name. */
-function Field({
-  label,
-  hint,
-  children,
+/** A whole-number length with a months/years unit, e.g. 18 months. */
+function TermLength({
+  name,
+  length,
+  unit,
+  disabled,
+  onLength,
+  onUnit,
 }: {
-  label: string;
-  hint?: string;
-  children: FieldControl;
+  name: string;
+  length: string;
+  unit: TermUnit;
+  disabled: boolean;
+  onLength: (length: string) => void;
+  onUnit: (unit: TermUnit) => void;
 }) {
-  const id = useId();
-  const hintId = `${id}-hint`;
   return (
-    <div className={styles.field}>
-      <label htmlFor={id} className={styles.label}>
-        {label}
-      </label>
-      {hint && (
-        <span id={hintId} className={styles.hint}>
-          {hint}
-        </span>
-      )}
-      {cloneElement(children, { id, "aria-describedby": hint ? hintId : undefined })}
-    </div>
+    <>
+      <input
+        type="number"
+        min={0}
+        step="any"
+        className={styles.years}
+        aria-label={`${name} length`}
+        value={length}
+        onChange={(e) => onLength(e.target.value)}
+        disabled={disabled}
+      />
+      <select
+        aria-label={`${name} unit`}
+        value={unit}
+        onChange={(e) => onUnit(e.target.value as TermUnit)}
+        disabled={disabled}
+      >
+        <option value="months">month(s)</option>
+        <option value="years">year(s)</option>
+      </select>
+    </>
   );
 }
 
 export default function NdaForm({ values, onChange }: NdaFormProps) {
   const set = <K extends keyof NdaFormValues>(key: K, value: NdaFormValues[K]) =>
     onChange({ [key]: value });
-
-  const setParty = (
-    party: "party1" | "party2",
-    key: keyof PartyDetails,
-    value: string,
-  ) => set(party, { ...values[party], [key]: value });
-
-  const partyFields = (party: "party1" | "party2", heading: string) => (
-    <fieldset className={styles.group}>
-      <legend>{heading}</legend>
-      <Field label="Company">
-        <input
-          value={values[party].company}
-          onChange={(e) => setParty(party, "company", e.target.value)}
-          autoComplete="organization"
-        />
-      </Field>
-      <Field label="Signatory name">
-        <input
-          value={values[party].name}
-          onChange={(e) => setParty(party, "name", e.target.value)}
-          autoComplete="name"
-        />
-      </Field>
-      <Field label="Title">
-        <input
-          value={values[party].title}
-          onChange={(e) => setParty(party, "title", e.target.value)}
-          autoComplete="organization-title"
-        />
-      </Field>
-      <Field label="Notice address" hint="Email or postal address">
-        <textarea
-          rows={2}
-          value={values[party].noticeAddress}
-          onChange={(e) => setParty(party, "noticeAddress", e.target.value)}
-        />
-      </Field>
-    </fieldset>
-  );
 
   return (
     <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
@@ -113,17 +86,17 @@ export default function NdaForm({ values, onChange }: NdaFormProps) {
             onChange={() => set("mndaTermType", "expires")}
           />
           Expires after
-          <input
-            type="number"
-            min={1}
-            className={styles.years}
-            aria-label="MNDA term in years"
-            value={values.mndaTermYears}
-            onChange={(e) => set("mndaTermYears", e.target.value)}
-            disabled={values.mndaTermType !== "expires"}
-          />
-          year(s)
         </label>
+        <div className={styles.term}>
+          <TermLength
+            name="MNDA term"
+            length={values.mndaTermLength}
+            unit={values.mndaTermUnit}
+            disabled={values.mndaTermType !== "expires"}
+            onLength={(v) => set("mndaTermLength", v)}
+            onUnit={(v) => set("mndaTermUnit", v)}
+          />
+        </div>
         <label className={styles.choice}>
           <input
             type="radio"
@@ -141,20 +114,21 @@ export default function NdaForm({ values, onChange }: NdaFormProps) {
           <input
             type="radio"
             name="confidentialityTermType"
-            checked={values.confidentialityTermType === "years"}
-            onChange={() => set("confidentialityTermType", "years")}
+            checked={values.confidentialityTermType === "fixed"}
+            onChange={() => set("confidentialityTermType", "fixed")}
           />
-          <input
-            type="number"
-            min={1}
-            className={styles.years}
-            aria-label="Term of confidentiality in years"
-            value={values.confidentialityTermYears}
-            onChange={(e) => set("confidentialityTermYears", e.target.value)}
-            disabled={values.confidentialityTermType !== "years"}
-          />
-          year(s) from the effective date
+          Fixed length from the effective date
         </label>
+        <div className={styles.term}>
+          <TermLength
+            name="Term of confidentiality"
+            length={values.confidentialityTermLength}
+            unit={values.confidentialityTermUnit}
+            disabled={values.confidentialityTermType !== "fixed"}
+            onLength={(v) => set("confidentialityTermLength", v)}
+            onUnit={(v) => set("confidentialityTermUnit", v)}
+          />
+        </div>
         <label className={styles.choice}>
           <input
             type="radio"
@@ -193,8 +167,16 @@ export default function NdaForm({ values, onChange }: NdaFormProps) {
         </Field>
       </fieldset>
 
-      {partyFields("party1", "Party 1")}
-      {partyFields("party2", "Party 2")}
+      <PartyFieldset
+        heading="Party 1"
+        party={values.party1}
+        onChange={(party1) => set("party1", party1)}
+      />
+      <PartyFieldset
+        heading="Party 2"
+        party={values.party2}
+        onChange={(party2) => set("party2", party2)}
+      />
     </form>
   );
 }

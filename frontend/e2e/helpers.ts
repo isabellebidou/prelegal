@@ -1,15 +1,17 @@
 import { expect, type Page } from "@playwright/test";
 import { defaultNdaFormValues, type NdaFormValues } from "../src/lib/nda";
 
-export const GREETING = "Hi! What is the NDA for?";
+export const GREETING = "Hi! What would you like to create?";
 
 export const COMPLETE_FIELDS: NdaFormValues = {
   purpose: "Exploring a joint venture.",
   effectiveDate: "2026-11-12",
   mndaTermType: "expires",
-  mndaTermYears: "2",
-  confidentialityTermType: "years",
-  confidentialityTermYears: "2",
+  mndaTermLength: "2",
+  mndaTermUnit: "years",
+  confidentialityTermType: "fixed",
+  confidentialityTermLength: "18",
+  confidentialityTermUnit: "months",
   governingLaw: "Delaware",
   jurisdiction: "New Castle, DE",
   modifications: "",
@@ -17,28 +19,48 @@ export const COMPLETE_FIELDS: NdaFormValues = {
   party2: { name: "Alan Turing", title: "CTO", company: "Globex", noticeAddress: "alan@globex.example" },
 };
 
+export interface StubTurn {
+  reply: string;
+  /** Defaults to the Mutual NDA; null means the AI has not chosen a document. */
+  documentType?: string | null;
+  /** NDA turns are merged over the default NDA values; others are sent as is. */
+  fields?: object;
+}
+
+export interface ChatRequestBody {
+  messages: { role: string; content: string }[];
+  documentType: string | null;
+  fields: Record<string, unknown> | null;
+  today: string;
+}
+
 /**
  * Stubs the chat API so no test calls the real AI. Each call to
  * /api/chat/message answers with the next turn and records the request body.
  */
-export async function stubChat(
-  page: Page,
-  turns: { reply: string; fields: Partial<NdaFormValues> }[] = [],
-) {
-  const requests: { messages: { role: string; content: string }[]; fields: NdaFormValues; today: string }[] = [];
+export async function stubChat(page: Page, turns: StubTurn[] = []) {
+  const requests: ChatRequestBody[] = [];
   await page.route("**/api/chat/greeting", (route) => route.fulfill({ json: { reply: GREETING } }));
   await page.route("**/api/chat/message", (route) => {
-    const body = route.request().postDataJSON();
-    requests.push(body);
+    requests.push(route.request().postDataJSON());
     const turn = turns.shift();
     if (!turn) return route.fulfill({ status: 502, json: { detail: "The AI service failed. Please try again." } });
-    return route.fulfill({ json: { reply: turn.reply, fields: { ...defaultNdaFormValues, ...turn.fields } } });
+    const documentType = turn.documentType === undefined ? "mutual-nda" : turn.documentType;
+    const fields =
+      documentType === null ? null : documentType === "mutual-nda" ? { ...defaultNdaFormValues, ...turn.fields } : turn.fields;
+    return route.fulfill({ json: { reply: turn.reply, documentType, fields } });
   });
   return requests;
 }
 
-/** Opens the NDA creator and waits for the app to hydrate (the greeting is fetched client-side). */
-export async function openNdaCreator(page: Page) {
-  await page.goto("/nda/");
+/** Opens the document creator and waits for the app to hydrate (the greeting is fetched client-side). */
+export async function openCreator(page: Page) {
+  await page.goto("/create/");
   await expect(page.getByRole("log", { name: "Conversation" })).toContainText(GREETING);
+}
+
+/** Picks a document type by hand in the "Edit fields" tab. */
+export async function chooseDocument(page: Page, name: string) {
+  await page.getByRole("tab", { name: "Edit fields" }).click();
+  await page.getByLabel("Document type").selectOption({ label: name });
 }

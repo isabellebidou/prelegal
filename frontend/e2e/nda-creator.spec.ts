@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { COMPLETE_FIELDS, openNdaCreator, stubChat } from "./helpers";
+import { chooseDocument, COMPLETE_FIELDS, openCreator, stubChat } from "./helpers";
 
 const party = (page: Page, name: "Party 1" | "Party 2") =>
   page.getByRole("group", { name });
@@ -9,8 +9,8 @@ const preview = (page: Page) => page.locator("article");
 // These tests edit the agreement through the form ("Edit fields" tab).
 test.beforeEach(async ({ page }) => {
   await stubChat(page);
-  await openNdaCreator(page);
-  await page.getByRole("tab", { name: "Edit fields" }).click();
+  await openCreator(page);
+  await chooseDocument(page, "Mutual Non-Disclosure Agreement");
 });
 
 /** Fills every required field through the form. */
@@ -18,8 +18,10 @@ async function fillRequiredFields(page: Page) {
   const f = COMPLETE_FIELDS;
   await page.getByLabel("Purpose", { exact: true }).fill(f.purpose);
   await page.getByLabel("Effective date", { exact: true }).fill(f.effectiveDate);
-  await page.getByLabel("MNDA term in years", { exact: true }).fill(f.mndaTermYears);
-  await page.getByLabel("Term of confidentiality in years", { exact: true }).fill(f.confidentialityTermYears);
+  await page.getByLabel("MNDA term length", { exact: true }).fill(f.mndaTermLength);
+  await page.getByLabel("MNDA term unit", { exact: true }).selectOption(f.mndaTermUnit);
+  await page.getByLabel("Term of confidentiality length", { exact: true }).fill(f.confidentialityTermLength);
+  await page.getByLabel("Term of confidentiality unit", { exact: true }).selectOption(f.confidentialityTermUnit);
   await page.getByLabel("Governing law", { exact: true }).fill(f.governingLaw);
   await page.getByLabel("Jurisdiction", { exact: true }).fill(f.jurisdiction);
   for (const [name, p] of [["Party 1", f.party1], ["Party 2", f.party2]] as const) {
@@ -70,8 +72,8 @@ test("reflects the term options in the cover page checkboxes", async ({ page }) 
   const box = (text: string) =>
     doc.locator("li", { hasText: text }).locator('input[type="checkbox"]');
 
-  await page.getByLabel("MNDA term in years", { exact: true }).fill("2");
-  await page.getByLabel("Term of confidentiality in years", { exact: true }).fill("3");
+  await page.getByLabel("MNDA term length", { exact: true }).fill("2");
+  await page.getByLabel("Term of confidentiality length", { exact: true }).fill("3");
   await expect(doc).toContainText("Expires 2 years from Effective Date.");
   await expect(doc).toContainText("3 years from Effective Date");
   await expect(box("Expires")).toBeChecked();
@@ -82,7 +84,24 @@ test("reflects the term options in the cover page checkboxes", async ({ page }) 
   await expect(box("Expires")).not.toBeChecked();
   await expect(box("Continues until terminated")).toBeChecked();
   await expect(box("In perpetuity")).toBeChecked();
-  await expect(page.getByLabel("MNDA term in years", { exact: true })).toBeDisabled();
+  await expect(page.getByLabel("MNDA term length", { exact: true })).toBeDisabled();
+  await expect(page.getByLabel("MNDA term unit", { exact: true })).toBeDisabled();
+});
+
+test("sets terms in months when below a year or between whole years", async ({ page }) => {
+  const doc = preview(page);
+  await page.getByLabel("MNDA term length", { exact: true }).fill("6");
+  await page.getByLabel("MNDA term unit", { exact: true }).selectOption("months");
+  await page.getByLabel("Term of confidentiality length", { exact: true }).fill("18");
+  await page.getByLabel("Term of confidentiality unit", { exact: true }).selectOption("months");
+
+  await expect(doc).toContainText("Expires 6 months from Effective Date.");
+  await expect(doc).toContainText("18 months from Effective Date, but in the case of trade secrets");
+
+  await page.getByLabel("Term of confidentiality length", { exact: true }).fill("1");
+  await expect(doc).toContainText("1 month from Effective Date");
+  await page.getByLabel("Term of confidentiality unit", { exact: true }).selectOption("years");
+  await expect(doc).toContainText("1 year from Effective Date, but in the case");
 });
 
 test("starts with the template placeholders and follows the effective date", async ({ page }) => {

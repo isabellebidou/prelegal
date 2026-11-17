@@ -1,4 +1,4 @@
-import type { NdaFormValues } from "./nda";
+import type { ChatTurnResult, DocumentState } from "./documents";
 
 /**
  * The backend's base URL. Empty in production, where the backend serves the
@@ -11,16 +11,16 @@ export interface ChatMessage {
   content: string;
 }
 
-export interface ChatTurn {
+export interface ChatTurn extends ChatTurnResult {
   reply: string;
-  fields: NdaFormValues;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, init);
   if (!response.ok) {
     const body = await response.json().catch(() => null);
-    throw new Error(body?.detail ?? "Something went wrong. Please try again.");
+    const detail = typeof body?.detail === "string" ? body.detail : null;
+    throw new Error(detail ?? "Something went wrong. Please try again.");
   }
   return response.json();
 }
@@ -30,15 +30,23 @@ export async function getGreeting(): Promise<string> {
   return reply;
 }
 
-/** Sends the conversation and current fields; returns the AI's reply and updated fields. */
+/**
+ * Sends the conversation and the current document; returns the AI's reply,
+ * the document type it is working on (null until chosen) and its fields.
+ */
 export function sendChatMessage(
   messages: ChatMessage[],
-  fields: NdaFormValues,
+  document: DocumentState,
   today: string,
 ): Promise<ChatTurn> {
   return request<ChatTurn>("/api/chat/message", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, fields, today }),
+    body: JSON.stringify({
+      messages,
+      documentType: document.type,
+      fields: document.values,
+      today,
+    }),
   });
 }

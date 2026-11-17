@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { COMPLETE_FIELDS, GREETING, openNdaCreator, stubChat } from "./helpers";
+import { chooseDocument, COMPLETE_FIELDS, GREETING, openCreator, stubChat } from "./helpers";
 
 const conversation = (page: Page) =>
   page.getByRole("log", { name: "Conversation" });
@@ -7,7 +7,7 @@ const messageBox = (page: Page) => page.getByLabel("Message");
 
 test("greets the user and focuses the message box", async ({ page }) => {
   await stubChat(page);
-  await openNdaCreator(page);
+  await openCreator(page);
   await expect(messageBox(page)).toBeFocused();
   await expect(page.getByRole("button", { name: "Download PDF" })).toHaveCount(0);
 });
@@ -19,7 +19,7 @@ test("fills the agreement from the AI's answer and sends the conversation", asyn
       fields: { purpose: "Exploring a joint venture.", governingLaw: "Delaware" },
     },
   ]);
-  await openNdaCreator(page);
+  await openCreator(page);
 
   await messageBox(page).fill("A joint venture, under Delaware law.");
   await page.getByRole("button", { name: "Send" }).click();
@@ -38,13 +38,14 @@ test("fills the agreement from the AI's answer and sends the conversation", asyn
     { role: "assistant", content: GREETING },
     { role: "user", content: "A joint venture, under Delaware law." },
   ]);
-  expect(requests[0].fields.purpose).toBe("");
+  expect(requests[0].documentType).toBeNull();
+  expect(requests[0].fields).toBeNull();
   expect(requests[0].today).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 });
 
 test("shows Download PDF once the chat has gathered every required field", async ({ page }) => {
   await stubChat(page, [{ reply: "All set. You can download the PDF.", fields: COMPLETE_FIELDS }]);
-  await openNdaCreator(page);
+  await openCreator(page);
 
   await messageBox(page).fill("Here are all the details...");
   await page.keyboard.press("Enter");
@@ -55,7 +56,7 @@ test("shows Download PDF once the chat has gathered every required field", async
 
 test("keeps the message to resend when the AI fails", async ({ page }) => {
   await stubChat(page); // No turns: every message gets a 502.
-  await openNdaCreator(page);
+  await openCreator(page);
 
   await messageBox(page).fill("Acme and Globex");
   await page.getByRole("button", { name: "Send" }).click();
@@ -69,9 +70,9 @@ test("sends fields edited in the form, and keeps the chat when switching tabs", 
   const requests = await stubChat(page, [
     { reply: "Noted.", fields: { governingLaw: "California" } },
   ]);
-  await openNdaCreator(page);
+  await openCreator(page);
 
-  await page.getByRole("tab", { name: "Edit fields" }).click();
+  await chooseDocument(page, "Mutual Non-Disclosure Agreement");
   await page.getByLabel("Governing law", { exact: true }).fill("California");
   await page.getByRole("tab", { name: "Chat" }).click();
 
@@ -80,7 +81,8 @@ test("sends fields edited in the form, and keeps the chat when switching tabs", 
   await page.getByRole("button", { name: "Send" }).click();
 
   await expect(conversation(page)).toContainText("Noted.");
-  expect(requests[0].fields.governingLaw).toBe("California");
+  expect(requests[0].documentType).toBe("mutual-nda");
+  expect(requests[0].fields?.governingLaw).toBe("California");
 });
 
 test("keeps form edits made while the AI is replying", async ({ page }) => {
@@ -92,10 +94,12 @@ test("keeps form edits made while the AI is replying", async ({ page }) => {
     const { fields } = route.request().postDataJSON();
     // The AI fills the jurisdiction and echoes everything else as it was sent.
     await route.fulfill({
-      json: { reply: "Noted.", fields: { ...fields, jurisdiction: "New Castle, DE" } },
+      json: { reply: "Noted.", documentType: "mutual-nda", fields: { ...fields, jurisdiction: "New Castle, DE" } },
     });
   });
-  await openNdaCreator(page);
+  await openCreator(page);
+  await chooseDocument(page, "Mutual Non-Disclosure Agreement");
+  await page.getByRole("tab", { name: "Chat" }).click();
 
   await messageBox(page).fill("Courts in New Castle, DE.");
   await page.getByRole("button", { name: "Send" }).click();

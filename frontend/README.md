@@ -2,26 +2,28 @@
 
 The Next.js frontend, built as static files (`out/`) that the FastAPI backend
 serves. `/` is a placeholder sign-in screen (no authentication yet: any name and
-email continue). `/nda/` is the Mutual NDA creator: the user fills in the key
-terms, sees the Common Paper Mutual NDA filled in, and downloads it as a PDF.
+email continue). `/create/` is the document creator for all 11 Common Paper
+documents in `../catalog.json` (`/nda/` redirects there): the user chats with
+the AI or edits fields, sees the agreement filled in, and downloads it as a PDF.
 
 ## How it works
 
-- `src/lib/templates.ts` reads `../templates/Mutual-NDA-coverpage.md` and
-  `../templates/Mutual-NDA.md` at build time, so the repository's templates are
-  the single source of the agreement text.
-- `src/lib/nda.ts` fills the cover page by replacing exact snippets of the
-  template with the (markdown-escaped) form values. Empty values keep the
-  template's placeholder. If the template changes and a snippet is no longer
-  found, it throws, and the unit tests fail.
-- `src/components/NdaDocument.tsx` renders the markdown with `react-markdown`
-  (GFM + sanitized inline HTML).
+- `../templates/documents.json` is the document registry shared with the
+  backend: each document's name, parties, template and key-term fields.
+  `src/lib/templates.ts` reads it and every template at build time.
+- The Mutual NDA has dedicated fields and cover page: `src/lib/nda.ts` fills
+  `Mutual-NDA-coverpage.md` by replacing exact snippets (it throws if the
+  template changes). Its terms take a length in months or years.
+- Every other document's cover page is rendered by `CoverPage.tsx` from its
+  registry fields. `src/lib/coverLayouts.ts` gives the Cloud Service Agreement
+  and Pilot Agreement dedicated layouts; the rest list their key terms.
 - `src/components/Chat.tsx` is the AI chat. Each message sends the whole
-  conversation and the current fields to `POST /api/chat/message`; the backend
-  asks OpenAI (Structured Outputs) and returns a reply plus the updated fields.
-  The "Edit fields" tab (`NdaForm.tsx`) edits the same fields by hand.
-- `isComplete` in `src/lib/nda.ts` decides when every required field (all
-  except modifications) is filled; only then is **Download PDF** shown.
+  conversation, the document type (null until chosen) and its fields to
+  `POST /api/chat/message`; the backend picks the document type, asks OpenAI
+  (Structured Outputs) and returns a reply, the type and the updated fields.
+  The "Edit fields" tab picks the type and edits the same fields by hand.
+- `isComplete` in `src/lib/documents.ts` decides when every required field is
+  filled; only then is **Download PDF** shown.
 - **Download PDF** opens the browser print dialog. Print styles hide the form,
   so choosing "Save as PDF" saves just the agreement, with the standard terms
   starting on a new page.

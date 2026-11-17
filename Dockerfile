@@ -21,6 +21,8 @@ COPY backend/pyproject.toml backend/uv.lock backend/.python-version ./
 RUN uv sync --locked --no-dev --no-install-project
 COPY backend/src/ ./src/
 RUN uv sync --locked --no-dev
+# The document type registry, shared with the frontend.
+COPY templates/documents.json /app/templates/documents.json
 COPY --from=frontend /app/frontend/out /app/static
 
 EXPOSE 8000

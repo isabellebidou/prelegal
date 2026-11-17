@@ -1,14 +1,15 @@
-import type { Metadata } from "next";
-import NdaCreator from "@/components/NdaCreator";
-import { loadMutualNdaTemplates } from "@/lib/templates";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Mutual NDA Creator | Prelegal",
-  description:
-    "Fill in the key terms of a Common Paper Mutual NDA and download the completed agreement.",
-};
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
+/** The NDA creator moved to /create, which handles every document type. */
 export default function NdaPage() {
-  const { coverPage, standardTerms } = loadMutualNdaTemplates();
-  return <NdaCreator coverPageTemplate={coverPage} standardTerms={standardTerms} />;
+  const router = useRouter();
+  useEffect(() => router.replace("/create/"), [router]);
+  return (
+    <p>
+      Moved to <a href="/create/">the document creator</a>.
+    </p>
+  );
 }

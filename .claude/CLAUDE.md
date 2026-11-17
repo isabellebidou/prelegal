@@ -8,7 +8,7 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The current implementation (PL-5) creates a Mutual NDA via AI chat, with a fake sign-in screen (no authentication yet). Support for all 11 document types (PL-6) and real accounts with saved documents (PL-7) are planned.
+The current implementation (PL-6) drafts all 11 document types via AI chat, with a fake sign-in screen (no authentication yet). Real accounts with saved documents (PL-7) are planned.
 
 ## Development process
 
@@ -75,13 +75,17 @@ Backend available at http://localhost:8000
 - Download button appears when all required fields are gathered (everything except modifications)
 - Stateless chat: POST /api/chat/message takes the conversation + current fields, returns reply + fields
 
-### Planned (PL-6)
+### Completed (PL-6)
 - Support for all 11 document types from catalog.json
 - AI detects document type from user requests and routes accordingly
 - Dedicated preview/PDF components for Mutual NDA, Cloud Service Agreement, Pilot Agreement
 - Generic preview/PDF components for remaining document types (Design Partner, SLA, Professional Services, Partnership, Software License, DPA, BAA, AI Addendum)
 - Auto-focus chat input after sending messages
 - AI always asks follow-on questions when more information is needed
+- Unsupported document requests get the closest supported document offered instead
+- Document registry in templates/documents.json, shared by backend and frontend
+- Single creator page at /create (/nda redirects); "Edit fields" tab has a document type picker
+- NDA terms (MNDA term and term of confidentiality) take a length in months or years
 
 ### Planned (PL-7)
 - Functional user authentication with JWT tokens in HttpOnly cookies
@@ -95,7 +99,7 @@ Backend available at http://localhost:8000
 
 ### Current API Endpoints
 - `GET /api/chat/greeting` - Get AI greeting
-- `POST /api/chat/message` - Send chat message and get AI response
+- `POST /api/chat/message` - Send chat message (+ documentType and fields) and get AI reply, documentType and fields
 - `GET /api/health` - Health check
 
 ### Planned API Endpoints (PL-7)
