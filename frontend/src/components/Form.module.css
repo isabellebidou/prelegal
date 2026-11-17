@@ -71,3 +71,29 @@
 .form input:disabled {
   opacity: 0.5;
 }
+
+/* Term length controls sit under their radio option. */
+.term {
+  display: flex;
+  gap: 0.5rem;
+  padding-left: 1.6rem;
+}
+
+.form select {
+  font: inherit;
+  font-size: 0.9rem;
+  color: inherit;
+  background: var(--input-background);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+}
+
+.form select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.form select:disabled {
+  opacity: 0.5;
+}

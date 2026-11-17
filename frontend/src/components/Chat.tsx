@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getGreeting, sendChatMessage, type ChatMessage } from "@/lib/api";
-import { mergeAiChanges, type NdaFormValues } from "@/lib/nda";
+import { applyTurn, type DocumentState } from "@/lib/documents";
 import styles from "./Chat.module.css";
 
 /** Today's date as YYYY-MM-DD in the user's local time zone. */
@@ -15,13 +15,16 @@ function localToday(): string {
 }
 
 interface ChatProps {
-  values: NdaFormValues;
-  /** Receives an updater that applies the AI's changes to the current fields. */
-  onFieldsChange: (update: (current: NdaFormValues) => NdaFormValues) => void;
+  state: DocumentState;
+  /** Receives an updater that applies the AI's answer to the current document. */
+  onStateChange: (update: (current: DocumentState) => DocumentState) => void;
 }
 
-/** Freeform chat with the AI, which fills in the NDA fields as it goes. */
-export default function Chat({ values, onFieldsChange }: ChatProps) {
+/**
+ * Freeform chat with the AI, which picks the document type and fills in its
+ * fields as it goes.
+ */
+export default function Chat({ state, onStateChange }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
@@ -55,11 +58,11 @@ export default function Chat({ values, onFieldsChange }: ChatProps) {
     setError("");
     setPending(true);
     try {
-      const sent = values;
+      const sent = state;
       const turn = await sendChatMessage(withUser, sent, localToday());
       setMessages([...withUser, { role: "assistant", content: turn.reply }]);
       // The form may have been edited while waiting; keep those edits.
-      onFieldsChange((current) => mergeAiChanges(current, sent, turn.fields));
+      onStateChange((current) => applyTurn(current, sent, turn));
     } catch (err) {
       // Put the message back so the user can resend it.
       setMessages(messages);

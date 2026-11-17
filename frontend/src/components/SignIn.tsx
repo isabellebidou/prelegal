@@ -13,7 +13,7 @@ export default function SignIn() {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    router.push("/nda/");
+    router.push("/create/");
   };
 
   return (

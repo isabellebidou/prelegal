@@ -3,12 +3,11 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   defaultNdaFormValues,
-  documentTitle,
   escapeMarkdown,
   fillCoverPage,
   formatDate,
+  formatDuration,
   isComplete,
-  mergeAiChanges,
   type NdaFormValues,
 } from "./nda";
 
@@ -21,9 +20,11 @@ const filled: NdaFormValues = {
   purpose: "Exploring a joint venture.",
   effectiveDate: "2026-11-11",
   mndaTermType: "expires",
-  mndaTermYears: "2",
-  confidentialityTermType: "years",
-  confidentialityTermYears: "3",
+  mndaTermLength: "2",
+  mndaTermUnit: "years",
+  confidentialityTermType: "fixed",
+  confidentialityTermLength: "3",
+  confidentialityTermUnit: "years",
   governingLaw: "Delaware",
   jurisdiction: "New Castle, DE",
   modifications: "",
@@ -79,8 +80,8 @@ describe("fillCoverPage", () => {
     const doc = fillCoverPage(template, {
       ...defaultNdaFormValues,
       purpose: "  ",
-      mndaTermYears: "0",
-      confidentialityTermYears: "",
+      mndaTermLength: "0",
+      confidentialityTermLength: "",
     });
 
     expect(doc).toContain(
@@ -94,8 +95,29 @@ describe("fillCoverPage", () => {
   });
 
   it("uses singular 'year' for a one-year term", () => {
-    const doc = fillCoverPage(template, { ...filled, mndaTermYears: "1" });
+    const doc = fillCoverPage(template, { ...filled, mndaTermLength: "1" });
     expect(doc).toContain("Expires 1 year from Effective Date.");
+  });
+
+  it("gives terms below a year or between whole years in months", () => {
+    const doc = fillCoverPage(template, {
+      ...filled,
+      mndaTermLength: "6",
+      mndaTermUnit: "months",
+      confidentialityTermLength: "18",
+      confidentialityTermUnit: "months",
+    });
+    expect(doc).toContain("- [x]     Expires 6 months from Effective Date.");
+    expect(doc).toContain("- [x]     18 months from Effective Date, but in the case of trade secrets");
+  });
+
+  it("uses singular 'month' for a one-month term", () => {
+    const doc = fillCoverPage(template, {
+      ...filled,
+      confidentialityTermLength: "1",
+      confidentialityTermUnit: "months",
+    });
+    expect(doc).toContain("- [x]     1 month from Effective Date");
   });
 
   it("escapes markdown and HTML in user input", () => {
@@ -151,13 +173,6 @@ describe("escapeMarkdown", () => {
   });
 });
 
-describe("documentTitle", () => {
-  it("names the PDF after the companies that are filled in", () => {
-    expect(documentTitle(filled)).toBe("Mutual NDA - Acme Inc - Globex");
-    expect(documentTitle(defaultNdaFormValues)).toBe("Mutual NDA");
-  });
-});
-
 describe("isComplete", () => {
   it("is false for the starting values", () => {
     expect(isComplete(defaultNdaFormValues)).toBe(false);
@@ -171,8 +186,9 @@ describe("isComplete", () => {
     ["purpose", { purpose: " " }],
     ["effective date", { effectiveDate: "" }],
     ["invalid effective date", { effectiveDate: "2026-02-30" }],
-    ["MNDA years", { mndaTermYears: "" }],
-    ["confidentiality years", { confidentialityTermYears: "0" }],
+    ["MNDA length", { mndaTermLength: "" }],
+    ["confidentiality length", { confidentialityTermLength: "0" }],
+    ["fractional months", { confidentialityTermLength: "1.5", confidentialityTermUnit: "months" as const }],
     ["governing law", { governingLaw: "" }],
     ["jurisdiction", { jurisdiction: "" }],
     ["a party field", { party2: { ...filled.party2, noticeAddress: "" } }],
@@ -180,49 +196,56 @@ describe("isComplete", () => {
     expect(isComplete({ ...filled, ...changes })).toBe(false);
   });
 
-  it("does not need years for terms that do not use them", () => {
+  it("does not need a length for terms that do not use it", () => {
     expect(
       isComplete({
         ...filled,
         mndaTermType: "untilTerminated",
-        mndaTermYears: "",
+        mndaTermLength: "",
         confidentialityTermType: "perpetual",
-        confidentialityTermYears: "",
+        confidentialityTermLength: "",
+      }),
+    ).toBe(true);
+  });
+
+  it("accepts terms in months", () => {
+    expect(
+      isComplete({
+        ...filled,
+        mndaTermLength: "9",
+        mndaTermUnit: "months",
+        confidentialityTermLength: "18",
+        confidentialityTermUnit: "months",
       }),
     ).toBe(true);
   });
 });
 
-describe("mergeAiChanges", () => {
-  const sent = { ...defaultNdaFormValues, governingLaw: "Delaware" };
-
-  it("takes the fields the AI changed", () => {
-    const returned = {
-      ...sent,
-      jurisdiction: "New Castle, DE",
-      party1: { ...sent.party1, company: "Acme Inc" },
-    };
-    expect(mergeAiChanges(sent, sent, returned)).toEqual(returned);
+describe("formatDuration", () => {
+  it.each([
+    ["1", "years", "1 year"],
+    ["3", "years", "3 years"],
+    ["1", "months", "1 month"],
+    ["6", "months", "6 months"],
+    ["18", "months", "18 months"],
+    [" 24 ", "months", "24 months"],
+    ["1.5", "years", "18 months"],
+    ["0.5", "years", "6 months"],
+    ["2.25", "years", "27 months"],
+  ] as const)("formats %s %s as %s", (length, unit, expected) => {
+    expect(formatDuration(length, unit)).toBe(expected);
   });
 
-  it("keeps fields edited while the AI was replying", () => {
-    const current = {
-      ...sent,
-      purpose: "Edited in the form",
-      party2: { ...sent.party2, name: "Alan Turing" },
-    };
-    const returned = { ...sent, jurisdiction: "New Castle, DE" };
-
-    const merged = mergeAiChanges(current, sent, returned);
-
-    expect(merged.jurisdiction).toBe("New Castle, DE");
-    expect(merged.purpose).toBe("Edited in the form");
-    expect(merged.party2.name).toBe("Alan Turing");
-    expect(merged.governingLaw).toBe("Delaware");
-  });
-
-  it("lets the AI clear a field", () => {
-    const returned = { ...sent, governingLaw: "" };
-    expect(mergeAiChanges(sent, sent, returned).governingLaw).toBe("");
+  it.each([
+    ["", "months"],
+    [" ", "years"],
+    ["0", "years"],
+    ["-3", "months"],
+    ["1.5", "months"],
+    ["1.3", "years"],
+    ["abc", "years"],
+    ["Infinity", "years"],
+  ] as const)("rejects %j %s", (length, unit) => {
+    expect(formatDuration(length, unit)).toBeNull();
   });
 });
