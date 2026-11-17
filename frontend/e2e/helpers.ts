@@ -53,9 +53,9 @@ export async function stubChat(page: Page, turns: StubTurn[] = []) {
   return requests;
 }
 
-/** Opens the document creator and waits for the app to hydrate (the greeting is fetched client-side). */
+/** Opens the app (the home page) and waits for it to hydrate (the greeting is fetched client-side). */
 export async function openCreator(page: Page) {
-  await page.goto("/create/");
+  await page.goto("/");
   await expect(page.getByRole("log", { name: "Conversation" })).toContainText(GREETING);
 }
 
@@ -63,4 +63,27 @@ export async function openCreator(page: Page) {
 export async function chooseDocument(page: Page, name: string) {
   await page.getByRole("tab", { name: "Edit fields" }).click();
   await page.getByLabel("Document type").selectOption({ label: name });
+}
+
+/** A unique email, so parallel tests sharing one backend don't collide. */
+export function uniqueEmail(name = "ada"): string {
+  return `${name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+}
+
+export const PASSWORD = "correct horse battery";
+
+/** Creates an account through the API; the browser context gets the session cookie. */
+export async function signUpViaApi(page: Page, name = "Ada Lovelace", email = uniqueEmail()) {
+  const response = await page.request.post("/api/auth/signup", { data: { name, email, password: PASSWORD } });
+  expect(response.status()).toBe(201);
+  return { name, email };
+}
+
+/** Fills in the "Create account" form in the sign-in dialog. */
+export async function createAccountInForm(page: Page, name: string, email: string) {
+  await page.getByRole("tab", { name: "Create account" }).click();
+  await page.getByLabel("Name", { exact: true }).fill(name);
+  await page.getByLabel("Email", { exact: true }).fill(email);
+  await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
+  await page.getByRole("button", { name: "Create account" }).click();
 }

@@ -34,16 +34,16 @@ def test_health(client):
     assert response.json() == {"status": "ok"}
 
 
-def test_startup_creates_users_table(client, db_path):
+def test_startup_creates_tables(client, db_path):
     with sqlite3.connect(db_path) as conn:
         tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    assert "users" in tables
+    assert {"users", "documents"} <= tables
 
 
 def test_startup_recreates_database_from_scratch(db_path, static_dir):
     with TestClient(create_app(db_path, static_dir)):
         with sqlite3.connect(db_path) as conn:
-            conn.execute("INSERT INTO users (email, name) VALUES ('a@example.com', 'A')")
+            conn.execute("INSERT INTO users (email, name, password_hash) VALUES ('a@example.com', 'A', 'x')")
 
     with TestClient(create_app(db_path, static_dir)):
         with sqlite3.connect(db_path) as conn:

@@ -8,7 +8,7 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The current implementation (PL-6, merged in PR #6) drafts all 11 document types via AI chat at /create, with a fake sign-in screen (no authentication yet). Real accounts with saved documents (PL-7) are next.
+The current implementation (PL-7) drafts all 11 document types via AI chat. The app is the home page at / (the only landing page). Anyone can draft and download as a guest; the sign-in / create-account dialog only appears from the header Sign in button or from Save.
 
 ## Development process
 
@@ -61,7 +61,7 @@ Backend available at http://localhost:8000
 - FastAPI backend with SQLite (fresh DB each container start)
 - Next.js static export served by FastAPI at localhost:8000
 - SQLite users table (no auth endpoints yet); GET /api/health
-- Fake sign-in screen at / (no authentication); NDA creator at /nda (now redirects to /create)
+- Fake sign-in screen at / (no authentication); NDA creator at /nda (now redirects to /)
 - Start/stop scripts for Mac, Linux, Windows
 - Mutual NDA form with live preview and PDF download
 
@@ -84,20 +84,24 @@ Backend available at http://localhost:8000
 - AI always asks follow-on questions when more information is needed
 - Unsupported document requests get the closest supported document offered instead
 - Document registry in templates/documents.json, shared by backend and frontend
-- Single creator page at /create (/nda redirects); "Edit fields" tab has a document type picker
+- Single creator page (now at /; /create and /nda redirect there); "Edit fields" tab has a document type picker
 - NDA terms (MNDA term and term of confidentiality) take a length in months or years; fractional years display as months (1.5 years -> 18 months)
 - One Structured Outputs schema per document type, built from the registry (backend/src/backend/documents.py)
 - Backend clears placeholder company names the model invents (e.g. "Your Company")
 
-### Planned (PL-7)
-- Functional user authentication with JWT tokens in HttpOnly cookies
+### Completed (PL-7)
+- Functional user authentication with JWT tokens in HttpOnly cookies (secret per server start unless JWT_SECRET is set; SECURE_COOKIES=1 adds the Secure flag)
 - User signup and signin with email/password (bcrypt password hashing)
-- Document persistence - users can save documents to their account
-- My Documents modal to view, load, and delete saved documents
+- Guests can draft and download; Save asks guests to sign in or create an account in a dialog, then saves
+- Document persistence - users can save documents (fields + chat conversation) to their account
+- My Documents modal to view, load, and delete saved documents; reopening restores the chat
 - User menu with sign out functionality
-- New Document button to start fresh
+- New Document button to start fresh (asks before discarding unsaved changes)
 - Auth context for managing user state across the app
-- Protected document save/load endpoints
+- Protected document save/load endpoints, scoped to the signed-in user
+- Disclaimer: banner in the app and a "Draft: subject to legal review" line printed on every document
+- UI polish with the brand colour scheme: header bar, welcome preview, dialogs
+- One landing page: / is the app; no separate sign-in page (/create and /nda redirect to /)
 
 ### Testing
 - Backend: `cd backend && uv run pytest`
@@ -108,7 +112,7 @@ Backend available at http://localhost:8000
 - `POST /api/chat/message` - Send chat message (+ documentType and fields) and get AI reply, documentType and fields
 - `GET /api/health` - Health check
 
-### Planned API Endpoints (PL-7)
+### Auth and document endpoints (PL-7)
 - `POST /api/auth/signup` - Create new user account
 - `POST /api/auth/signin` - Sign in and receive JWT cookie
 - `POST /api/auth/signout` - Clear auth cookie

@@ -4,8 +4,10 @@ version = "0.1.0"
 description = "Prelegal API: FastAPI app that also serves the static frontend"
 requires-python = ">=3.13"
 dependencies = [
+    "bcrypt>=5.0.0",
     "fastapi>=0.162.5",
     "openai>=3.50.0",
+    "pyjwt>=2.15.1",
     "uvicorn>=0.54.0",
 ]
 

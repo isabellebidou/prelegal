@@ -18,28 +18,39 @@ interface ChatProps {
   state: DocumentState;
   /** Receives an updater that applies the AI's answer to the current document. */
   onStateChange: (update: (current: DocumentState) => DocumentState) => void;
+  /** The conversation, kept by the parent so it can be saved and restored. */
+  messages: ChatMessage[];
+  onMessagesChange: (messages: ChatMessage[]) => void;
 }
 
 /**
  * Freeform chat with the AI, which picks the document type and fills in its
- * fields as it goes.
+ * fields as it goes. Starts with the AI's greeting when the conversation is
+ * empty. Give it a new `key` to start another conversation.
  */
-export default function Chat({ state, onStateChange }: ChatProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+export default function Chat({ state, onStateChange, messages, onMessagesChange: setMessages }: ChatProps) {
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
+  // False once this conversation is replaced (e.g. New document), so a late
+  // AI answer is not applied to the next document.
+  const alive = useRef(true);
+  const startedEmpty = useRef(messages.length === 0);
 
   useEffect(() => {
-    let cancelled = false;
-    getGreeting()
-      .then((reply) => !cancelled && setMessages([{ role: "assistant", content: reply }]))
-      .catch((err: Error) => !cancelled && setError(err.message));
+    alive.current = true;
+    if (startedEmpty.current) {
+      getGreeting()
+        .then((reply) => alive.current && setMessages([{ role: "assistant", content: reply }]))
+        .catch((err: Error) => alive.current && setError(err.message));
+    }
     return () => {
-      cancelled = true;
+      alive.current = false;
     };
+    // Only on mount: a restored conversation has no greeting to fetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Keep the newest message in view.
@@ -60,17 +71,21 @@ export default function Chat({ state, onStateChange }: ChatProps) {
     try {
       const sent = state;
       const turn = await sendChatMessage(withUser, sent, localToday());
+      if (!alive.current) return;
       setMessages([...withUser, { role: "assistant", content: turn.reply }]);
       // The form may have been edited while waiting; keep those edits.
       onStateChange((current) => applyTurn(current, sent, turn));
     } catch (err) {
+      if (!alive.current) return;
       // Put the message back so the user can resend it.
       setMessages(messages);
       setDraft(text);
       setError((err as Error).message);
     } finally {
-      setPending(false);
-      inputRef.current?.focus();
+      if (alive.current) {
+        setPending(false);
+        inputRef.current?.focus();
+      }
     }
   };
 
