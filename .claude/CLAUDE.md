@@ -8,7 +8,7 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The current implementation (PL-6) drafts all 11 document types via AI chat, with a fake sign-in screen (no authentication yet). Real accounts with saved documents (PL-7) are planned.
+The current implementation (PL-6, merged in PR #6) drafts all 11 document types via AI chat at /create, with a fake sign-in screen (no authentication yet). Real accounts with saved documents (PL-7) are next.
 
 ## Development process
 
@@ -61,7 +61,7 @@ Backend available at http://localhost:8000
 - FastAPI backend with SQLite (fresh DB each container start)
 - Next.js static export served by FastAPI at localhost:8000
 - SQLite users table (no auth endpoints yet); GET /api/health
-- Fake sign-in screen at / (no authentication); NDA creator at /nda
+- Fake sign-in screen at / (no authentication); NDA creator at /nda (now redirects to /create)
 - Start/stop scripts for Mac, Linux, Windows
 - Mutual NDA form with live preview and PDF download
 
@@ -75,17 +75,19 @@ Backend available at http://localhost:8000
 - Download button appears when all required fields are gathered (everything except modifications)
 - Stateless chat: POST /api/chat/message takes the conversation + current fields, returns reply + fields
 
-### Completed (PL-6)
+### Completed (PL-6, PR #6)
 - Support for all 11 document types from catalog.json
 - AI detects document type from user requests and routes accordingly
-- Dedicated preview/PDF components for Mutual NDA, Cloud Service Agreement, Pilot Agreement
-- Generic preview/PDF components for remaining document types (Design Partner, SLA, Professional Services, Partnership, Software License, DPA, BAA, AI Addendum)
+- Dedicated cover pages for Mutual NDA (fills Mutual-NDA-coverpage.md), Cloud Service Agreement and Pilot Agreement (layouts in frontend/src/lib/coverLayouts.ts)
+- Generic key-terms cover page for the remaining documents (Design Partner, SLA, Professional Services, Partnership, Software License, DPA, BAA, AI Addendum); all render standard terms below and download as PDF
 - Auto-focus chat input after sending messages
 - AI always asks follow-on questions when more information is needed
 - Unsupported document requests get the closest supported document offered instead
 - Document registry in templates/documents.json, shared by backend and frontend
 - Single creator page at /create (/nda redirects); "Edit fields" tab has a document type picker
-- NDA terms (MNDA term and term of confidentiality) take a length in months or years
+- NDA terms (MNDA term and term of confidentiality) take a length in months or years; fractional years display as months (1.5 years -> 18 months)
+- One Structured Outputs schema per document type, built from the registry (backend/src/backend/documents.py)
+- Backend clears placeholder company names the model invents (e.g. "Your Company")
 
 ### Planned (PL-7)
 - Functional user authentication with JWT tokens in HttpOnly cookies
@@ -96,6 +98,10 @@ Backend available at http://localhost:8000
 - New Document button to start fresh
 - Auth context for managing user state across the app
 - Protected document save/load endpoints
+
+### Testing
+- Backend: `cd backend && uv run pytest`
+- Frontend: `cd frontend && npm run lint && npm test && npm run test:e2e`
 
 ### Current API Endpoints
 - `GET /api/chat/greeting` - Get AI greeting
