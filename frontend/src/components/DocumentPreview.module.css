@@ -162,3 +162,15 @@
   color: #6b6b6b;
   padding: 4rem 1rem;
 }
+
+.empty h2 {
+  font-family: system-ui, sans-serif;
+  font-size: 1.4rem;
+  color: #032147;
+  margin-bottom: 1rem;
+}
+
+.empty p {
+  max-width: 34rem;
+  margin: 0.5rem auto;
+}

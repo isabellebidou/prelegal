@@ -8,7 +8,7 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The current implementation (PL-7) drafts all 11 document types via AI chat at /create. Anyone can draft and download as a guest; an account (email + password) is needed only to save documents.
+The current implementation (PL-7) drafts all 11 document types via AI chat. The app is the home page at / (the only landing page). Anyone can draft and download as a guest; the sign-in / create-account dialog only appears from the header Sign in button or from Save.
 
 ## Development process
 
@@ -61,7 +61,7 @@ Backend available at http://localhost:8000
 - FastAPI backend with SQLite (fresh DB each container start)
 - Next.js static export served by FastAPI at localhost:8000
 - SQLite users table (no auth endpoints yet); GET /api/health
-- Fake sign-in screen at / (no authentication); NDA creator at /nda (now redirects to /create)
+- Fake sign-in screen at / (no authentication); NDA creator at /nda (now redirects to /)
 - Start/stop scripts for Mac, Linux, Windows
 - Mutual NDA form with live preview and PDF download
 
@@ -84,7 +84,7 @@ Backend available at http://localhost:8000
 - AI always asks follow-on questions when more information is needed
 - Unsupported document requests get the closest supported document offered instead
 - Document registry in templates/documents.json, shared by backend and frontend
-- Single creator page at /create (/nda redirects); "Edit fields" tab has a document type picker
+- Single creator page (now at /; /create and /nda redirect there); "Edit fields" tab has a document type picker
 - NDA terms (MNDA term and term of confidentiality) take a length in months or years; fractional years display as months (1.5 years -> 18 months)
 - One Structured Outputs schema per document type, built from the registry (backend/src/backend/documents.py)
 - Backend clears placeholder company names the model invents (e.g. "Your Company")
@@ -100,7 +100,8 @@ Backend available at http://localhost:8000
 - Auth context for managing user state across the app
 - Protected document save/load endpoints, scoped to the signed-in user
 - Disclaimer: banner in the app and a "Draft: subject to legal review" line printed on every document
-- UI polish with the brand colour scheme: landing page, header bar, dialogs
+- UI polish with the brand colour scheme: header bar, welcome preview, dialogs
+- One landing page: / is the app; no separate sign-in page (/create and /nda redirect to /)
 
 ### Testing
 - Backend: `cd backend && uv run pytest`

@@ -53,9 +53,9 @@ export async function stubChat(page: Page, turns: StubTurn[] = []) {
   return requests;
 }
 
-/** Opens the document creator and waits for the app to hydrate (the greeting is fetched client-side). */
+/** Opens the app (the home page) and waits for it to hydrate (the greeting is fetched client-side). */
 export async function openCreator(page: Page) {
-  await page.goto("/create/");
+  await page.goto("/");
   await expect(page.getByRole("log", { name: "Conversation" })).toContainText(GREETING);
 }
 
@@ -79,7 +79,7 @@ export async function signUpViaApi(page: Page, name = "Ada Lovelace", email = un
   return { name, email };
 }
 
-/** Fills in the "Create account" form (on the landing page or in the sign-in dialog). */
+/** Fills in the "Create account" form in the sign-in dialog. */
 export async function createAccountInForm(page: Page, name: string, email: string) {
   await page.getByRole("tab", { name: "Create account" }).click();
   await page.getByLabel("Name", { exact: true }).fill(name);

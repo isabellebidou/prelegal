@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthProvider";
 import styles from "./AppHeader.module.css";
@@ -28,10 +29,10 @@ export default function AppHeader({ onNewDocument, onMyDocuments, onSignIn }: Ap
 
   return (
     <header className={styles.header}>
-      <a href="/create/" className={styles.brand}>
+      <Link href="/" className={styles.brand}>
         <span className={styles.mark} aria-hidden="true" />
         Prelegal
-      </a>
+      </Link>
 
       <nav className={styles.actions} aria-label="Documents">
         <button type="button" className={styles.action} onClick={onNewDocument}>

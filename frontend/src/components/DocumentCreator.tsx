@@ -269,8 +269,15 @@ export default function DocumentCreator({ templates }: { templates: Templates })
             <Preview doc={doc} state={state} templates={templates} />
           ) : (
             <article className={`${previewStyles.document} ${previewStyles.empty}`}>
-              Tell the AI what agreement you need, or choose a document type under Edit fields.
-              Your document will appear here.
+              <h2>Draft legal agreements in minutes</h2>
+              <p>
+                Tell the AI what agreement you need, or choose a document type under Edit fields.
+                Your document will appear here.
+              </p>
+              <p>
+                11 Common Paper standard agreements, from NDAs to DPAs. Download a PDF anytime;
+                sign in to save your drafts.
+              </p>
             </article>
           )}
         </main>

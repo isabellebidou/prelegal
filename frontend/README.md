@@ -1,10 +1,11 @@
 # Prelegal frontend
 
 The Next.js frontend, built as static files (`out/`) that the FastAPI backend
-serves. `/` is the landing page: sign in, create an account, or continue as a
-guest. `/create/` is the document creator for all 11 Common Paper
-documents in `../catalog.json` (`/nda/` redirects there): the user chats with
-the AI or edits fields, sees the agreement filled in, and downloads it as a PDF.
+serves. `/` is the app, the only landing page: the document creator for all 11
+Common Paper documents in `../catalog.json` (`/create/` and `/nda/` redirect
+there). The user chats with the AI or edits fields, sees the agreement filled
+in, and downloads it as a PDF. Signing in (header **Sign in**, or **Save**) is
+only needed to save documents.
 
 ## How it works
 
